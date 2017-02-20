@@ -29,6 +29,7 @@ static Status getBlock(const std::string &msg)
 class CNode
 {
 public:
+	CNode(){}
 	//assume ipv4 bydefault, but should check when parsing
 	CNode(std::string node_ipaddr, std::string node_port) : peer_addr(node_ipaddr), port(node_port) {
 		channel = grpc::CreateChannel(node_ipaddr + ":" + node_port, grpc::InsecureChannelCredentials());
@@ -100,10 +101,17 @@ private:
 	std::mutex qlock;
 };
 
-int main()
+int main(int argc, char** argv)
 {
 	std::string server_address("0.0.0.0:50051");
-	//RouteGuideImpl service(db_path);
+	CNode seed;
+	if(argc > 1 && argc == 3)
+	{//must both provide ip and port, otherwise only serve as server
+		seed.peer_addr = argv[1];
+		seed.port = argv[2];
+		seed.channel = grpc::CreateChannel(seed.peer_addr + ':' + seed.port, grpc::InsecureChannelCredentials());
+		std::cout << "connect to seed " << seed.peer_addr << ':' << seed.port << std::endl;
+	}
 	ChainServerImpl service;
 
 	ServerBuilder builder;
