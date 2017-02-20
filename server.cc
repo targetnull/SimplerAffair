@@ -29,16 +29,27 @@ static Status getBlock(const std::string &msg)
 class CNode
 {
 public:
-	CNode(){}
-	//assume ipv4 bydefault, but should check when parsing
-	CNode(std::string node_ipaddr, std::string node_port) : peer_addr(node_ipaddr), port(node_port) {
-		channel = grpc::CreateChannel(node_ipaddr + ":" + node_port, grpc::InsecureChannelCredentials());
-		std::cout << "successfully connect back to sender " << node_ipaddr << ':' << node_port << std::endl;
+	CNode(const char *node_ip, const char *node_port) : peer_ip(node_ip), port(node_port) {
+		stub_ = ChainServer::NewStub(grpc::CreateChannel(peer_ip + ':' + port, grpc::InsecureChannelCredentials()));
+                std::cout << "successfully connect back to sender " << peer_ip << ':' << port << std::endl;
 	}
 
-	std::string& get_addr()
+	//assume ipv4 bydefault, but should check when parsing
+	CNode(std::string &node_ip, std::string &node_port) : peer_ip(node_ip), port(node_port) {
+		stub_ = ChainServer::NewStub(grpc::CreateChannel(peer_ip + ":" + port, grpc::InsecureChannelCredentials()));
+		std::cout << "successfully connect back to sender " << peer_ip << ':' << port << std::endl;
+	}
+
+	//this way is strongly NOT suggested as it hides the ip and port of the connection
+	CNode(std::shared_ptr<Channel> &chan): channel(chan)
+        {
+                stub_ = ChainServer::NewStub(channel);
+                std::cout << "A channel is directly provided :( ";
+        }
+
+	std::string& get_ip()
 	{
-		return peer_addr;
+		return peer_ip;
 	}
 
 	std::string& get_port()
@@ -46,8 +57,9 @@ public:
 		return port;
 	}
 
-	std::string peer_addr;
+	std::string peer_ip;
 	std::string port;
+	std::unique_ptr<ChainServer::Stub> stub_;
 	std::shared_ptr<Channel> channel; //corresponding channel
 };
 
@@ -58,11 +70,12 @@ public:
 		std::string peer_addr = context->peer();
 		int pos1 = peer_addr.find(':');
 		int pos2 = peer_addr.find(':', pos1 + 1);
-		std::cout << pos1 << ':' << pos2 << std::endl;
 		std::cout << "Received connect from " << peer_addr.substr(pos1, pos2 - pos1 + 1) << std::endl;
 		std::cout << "msg type is " << msg->type() << std::endl;
+		std::string peer_ip = peer_addr.substr(pos1, pos2 - pos1 + 1);
+		std::string peer_port = peer_addr.substr(pos2);
 		//then establish a reverse connection
-		CNode *node = new CNode(peer_addr.substr(pos1, pos2 - pos1 + 1), peer_addr.substr(pos2));
+		CNode *node = new CNode(peer_ip, peer_port);
 		cnodes.push_back(node); 
 		return Status::OK;
 	}
@@ -91,26 +104,25 @@ public:
 		for (std::vector<CNode *>::iterator it = cnodes.begin() ; it != cnodes.end(); ++it)
 		{
 			CNode *tnode = *it;
-			if(0 == addr.compare(tnode->get_addr())) //FOUND!
+			if(0 == addr.compare(tnode->get_ip())) //FOUND!
 				return tnode;
 		}
 		return NULL; //bad luck
 	}
 private:
 	std::vector<CNode *> cnodes;
-	std::mutex qlock;
+	//std::unique_ptr<ChainServer::Stub> stub_;
+	//std::mutex qlock;
 };
 
 int main(int argc, char** argv)
 {
 	std::string server_address("0.0.0.0:50051");
-	CNode seed;
+	CNode *seed = NULL;
 	if(argc > 1 && argc == 3)
 	{//must both provide ip and port, otherwise only serve as server
-		seed.peer_addr = argv[1];
-		seed.port = argv[2];
-		seed.channel = grpc::CreateChannel(seed.peer_addr + ':' + seed.port, grpc::InsecureChannelCredentials());
-		std::cout << "connect to seed " << seed.peer_addr << ':' << seed.port << std::endl;
+		seed = new CNode(argv[1], argv[2]);
+		std::cout << "connect to seed " << seed->peer_ip << ':' << seed->port << std::endl;
 	}
 	ChainServerImpl service;
 
@@ -120,6 +132,7 @@ int main(int argc, char** argv)
 	std::unique_ptr<Server> server(builder.BuildAndStart());
 	std::cout << "Server listening on " << server_address << std::endl;
 	server->Wait();
+	delete seed;
 	return 0;
 }
 
