@@ -67,10 +67,10 @@ public:
 		std::string peer_addr = context->peer();
 		int pos1 = peer_addr.find(':');
 		int pos2 = peer_addr.find(':', pos1 + 1);
-		std::cout << "Received connect from " << peer_addr.substr(pos1, pos2 - pos1 + 1) << std::endl;
+		std::cout << "Received connect from " << peer_addr.substr(pos1 + 1, pos2 - pos1 - 1) << " " << peer_addr.substr(pos2 + 1) << std::endl;
 		//std::cout << "msg type is " << msg->type() << std::endl;
-		std::string peer_ip = peer_addr.substr(pos1, pos2 - pos1 + 1);
-		std::string peer_port = peer_addr.substr(pos2);
+		std::string peer_ip = peer_addr.substr(pos1 + 1, pos2 - pos1 - 1);
+		std::string peer_port = peer_addr.substr(pos2 + 1);
 		//then establish a reverse connection
 		CNode *node = new CNode(peer_ip, peer_port);
 		cnodes.push_back(node); 
