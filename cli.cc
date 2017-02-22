@@ -50,6 +50,8 @@ int main(int argc, char **argv)
 	msg.set_type(MsgType::GET_CMD);
 	msg.set_data("This is my command, do it now!\n");	 
 	stub_->SendMsg(&context, msg, &empty);
+	//let's try
+	context.TryCancel();
 
 	return 0;
 }
