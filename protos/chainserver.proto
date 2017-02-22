@@ -62,34 +62,12 @@ enum MsgType {
 	GET_TX = 5;
 	SNED_TX = 6;
 	QUIT = 7;
+	GET_CMD = 8; //get command from local cli
 }
 
 message MsgBlock {
-/*
-	enum MsgType {
-		NEW_PEER = 0;
-		GET_BLOCK = 1;
-		SEND_BLOCK = 2;
-		GET_NODES = 3;
-		SEND_NODES = 4;
-		GET_TX = 5;
-		SNED_TX = 6;
-		QUIT = 7;
-	}
-*/
 	MsgType type = 1;
-	string msgdata = 2;
-}
-
-message ReplyType {
-	int32 success = 1;
-	int32 fail = 2;
-	int32 error = 3;
-}
-
-message Reply {
-	ReplyType type = 1;
-	string errmsg = 2; //if any
+	string data = 2;
 }
 
 message Transaction {

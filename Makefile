@@ -43,9 +43,12 @@ PROTOS_PATH = ./protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: system-check mychain
+all: system-check mychain cli
 
 mychain: chainserver.pb.o chainserver.grpc.pb.o server.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
+cli: chainserver.pb.o chainserver.pb.o chainserver.grpc.pb.o cli.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 .PRECIOUS: %.grpc.pb.cc
@@ -57,7 +60,7 @@ mychain: chainserver.pb.o chainserver.grpc.pb.o server.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h mychain
+	rm -f *.o *.pb.cc *.pb.h mychain cli
 
 
 # The following is to test your system and ensure a smoother experience.
