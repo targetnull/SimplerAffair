@@ -1,25 +1,3 @@
-#if 0
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include <grpc++/grpc++.h>
-
-#include "chainserver.grpc.pb.h"
-
-using grpc::Channel;
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
-using grpc::ClientContext;
-using chainserver::ChainServer;
-using chainserver::MsgType;
-using chainserver::MsgBlock;
-using chainserver::Block;
-using chainserver::Empty;
-#endif
 #include "server.h"
 
 static Status getBlock(const std::string &msg)

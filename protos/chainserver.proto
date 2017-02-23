@@ -70,11 +70,24 @@ message MsgBlock {
 	string data = 2;
 }
 
+//the data structures below mimics bitcoin
+//see https://bitcoin.org/en/developer-reference#block-headers
 message Transaction {
+	
+}
 
+message BlockHeader {
+	uint32 version = 1;
+	bytes prev_header_hash = 2;
+	bytes merkel_root_hash = 3;
+	uint32 time = 4; //Unix epoch time when the miner started hashing the header(according to miner).Must be strictly greater than the median time of the previous 11 blocks.
+	uint32 nBits = 5; //target threshold this block’s header hash must be less than or equal to
+	uint32 nonce = 6;
 }
 
 message Block {
-
+	BlockHeader header = 1;
+	int32 txn_count = 2; //number of transactions
+	Transaction txns = 3;	
 }
 
