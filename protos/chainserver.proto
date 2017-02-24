@@ -67,13 +67,24 @@ enum MsgType {
 
 message MsgBlock {
 	MsgType type = 1;
-	string data = 2;
+	Block block = 2;
+	string data = 3; //data is for local commands
 }
 
 //the data structures below mimics bitcoin
 //see https://bitcoin.org/en/developer-reference#block-headers
+message TxHeader {
+	uint32 incnt = 1; //number of inputs
+        bytes SenderPubkey = 2; //public key of the sender
+        bytes DestPublic = 3; //receiver's public key
+        int32 timestamp = 4;
+        uint32 nonce = 5;
+}
+
 message Transaction {
-	
+	TxHeader txheader = 1;
+	bytes header_sig = 2; //signature of the header hash, signed(sha256(header))
+	bytes realthings = 3; //the real data that deal with the affairs
 }
 
 message BlockHeader {

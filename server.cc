@@ -28,6 +28,12 @@ static CNode *connect_seed(const char *ip, const char *port)
 	return seed;
 }
 
+static Status sendBlock(const Block &block)
+{
+	std::cout << "ready to send block!!\n";
+	return Status::OK;
+}
+
 Status ChainServerImpl::Connect(ServerContext* context, const MsgBlock* msg, Empty* empty)
 {
 	std::string peer_addr = context->peer();
@@ -53,6 +59,9 @@ Status ChainServerImpl::SendMsg(ServerContext* context, const MsgBlock* msg, Emp
 	{
 	case MsgType::GET_BLOCK:
 		res = getBlock(msg->data());
+		break;
+	case MsgType::SEND_BLOCK:
+		res = sendBlock(msg->block());
 		break;
 	case MsgType::GET_CMD:
 		res = cliCmd(msg->data());

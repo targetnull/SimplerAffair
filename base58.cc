@@ -121,12 +121,14 @@ static const int8_t b58digits[] = {
 	47,48,49,50,51,52,53,54, 55,56,57,-1,-1,-1,-1,-1,
 };
 
-size_t Base58Decode(const char *begin, size_t size, unsigned char *to)
+size_t Base58Decode(std::string &begin, size_t size, std::string &res)
 {
 	unsigned char c;
-	unsigned char *p = (unsigned char *)begin;
-	unsigned char *pend = p + size;
+	const unsigned char *p = (const unsigned char *)begin.c_str();
+	//unsigned char *pend = p + begin.size();
 	size_t cb;
+	int cnt = 0;
+	char *to;
 	BIGNUM bn, bnchar;
 	BIGNUM bn58, bn0;
 	BN_CTX *ctx = BN_CTX_new();
@@ -136,19 +138,25 @@ size_t Base58Decode(const char *begin, size_t size, unsigned char *to)
 	BN_init(&bn); BN_init(&bnchar);
 	BN_set_word(&bn58, 58);
 	BN_zero(&bn0);
-	while(p < pend)
+	//while(p < pend)
+	while(cnt < size)
 	{
-		c = *p;
+		//c = *p;
+		c = p[cnt++];
 		if(c & 0x80) goto label_errexit;
 		if(-1 == b58digits[c]) goto label_errexit;
 		BN_set_word(&bnchar, b58digits[c]);
 		if(!BN_mul(&bn, &bn, &bn58, ctx)) goto label_errexit;
 		BN_add(&bn, &bn, &bnchar);
-		p++;
+		//p++;
 	}
 	cb = BN_num_bytes(&bn);
 	if(NULL == to) return cb;
-	BN_bn2bin(&bn, to);
+	to = new char(cb);
+	//BN_bn2bin(&bn, to);
+	BN_bn2bin(&bn, (unsigned char *)to);
+	res = to;
+	delete to;
 	BN_CTX_free(ctx);
 	return cb;
 label_errexit:
