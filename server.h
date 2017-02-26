@@ -12,7 +12,7 @@
 #include "chainserver.grpc.pb.h"
 
 #include "threadsafe_queue.h"
-#include "deserialize.h"
+//#include "deserialize.h"
 
 using grpc::Channel;
 using grpc::Server;
@@ -24,10 +24,15 @@ using chainserver::ChainServer;
 using chainserver::MsgType;
 using chainserver::MsgBlock;
 using chainserver::Block;
+using chainserver::BlockHeader;
 using chainserver::Empty;
+using chainserver::Transaction;
+using chainserver::TxHeader;
+
+class lMsgBlock;
 
 typedef struct _INBOUNDMSG {
-	threadsafe_queue<const MsgBlock *> bq;
+	threadsafe_queue<lMsgBlock> bq;
 	//TODO. add according to your need.
 } InboundMsg;
 

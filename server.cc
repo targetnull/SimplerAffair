@@ -1,4 +1,5 @@
 #include "server.h"
+#include "deserialize.h"
 
 #define CMD_HANDLER   //just helper macro
 
@@ -8,7 +9,7 @@ static CMD_HANDLER Status getBlock(const std::string &msg)
 	return Status::OK;
 }
 
-static CMD_HANDLER Status sendBlock(const Block &block)
+static CMD_HANDLER Status sendBlock(lBlock &block)
 {
 	std::cout << "ready to send block!!\n";
 	return Status::OK;
@@ -72,29 +73,31 @@ Status ChainServerImpl::SendMsg(ServerContext* context, const MsgBlock* msg, Emp
 #endif
 
 	std::cout << "message type [before] is " << msg->type() << std::endl;
-	//add msg to queue
-	inmsg.bq.push(msg);
+
+	//deserialize MsgBlock to local class object to simplify the process.
+	lMsgBlock *newmsg = new lMsgBlock(msg);
+	inmsg.bq.push(*newmsg);
 
 	return Status::OK;
 }
 
 void ChainServerImpl::eventHandler(InboundMsg &inmsg)
 {
-	const MsgBlock *msg;
+	lMsgBlock msg;
 	while(true)
 	{
 		inmsg.bq.wait_and_pop(msg); //wait until there is an element
-		std::cout << "msg type is " << msg->type() << std::endl;
-		switch(msg->type())
+		std::cout << "msg type is " << msg.type << std::endl;
+		switch(msg.type)
 		{
 			case MsgType::GET_BLOCK:
-				getBlock(msg->data());
+				getBlock(msg.data);
 				break;
 			case MsgType::SEND_BLOCK:
-				sendBlock(msg->block());
+				sendBlock(msg.block);
 				break;
-			case MsgType::GET_CMD:
-				cliCmd(msg->data());
+			case MsgType::GET_CMD: //local command
+				cliCmd(msg.data);
 				break;
 			case MsgType::QUIT:
 				//TODO. should check if it is from the server or the peer

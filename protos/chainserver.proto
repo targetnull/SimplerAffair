@@ -75,16 +75,16 @@ message MsgBlock {
 //see https://bitcoin.org/en/developer-reference#block-headers
 message TxHeader {
 	uint32 incnt = 1; //number of inputs
-	bytes SenderPubkey = 2; //public key of the sender
-	bytes DestPublic = 3; //receiver's public key
+	bytes senderpubkey = 2; //public key of the sender
+	bytes destpubkey = 3; //receiver's public key
 	int32 timestamp = 4;
 	uint32 nonce = 5;
 }
 
 message Transaction {
-	TxHeader txheader = 1;
+	TxHeader header = 1;
 	bytes header_sig = 2; //signature of the header hash, signed(sha256(header))
-	bytes realthings = 3; //the real data that deal with the affairs
+	bytes data = 3; //the real data that deal with the affairs
 }
 
 message BlockHeader {
@@ -92,7 +92,7 @@ message BlockHeader {
 	bytes prev_header_hash = 2;
 	bytes merkel_root_hash = 3;
 	uint32 time = 4; //Unix epoch time when the miner started hashing the header(according to miner).Must be strictly greater than the median time of the previous 11 blocks.
-	uint32 nBits = 5; //target threshold this block’s header hash must be less than or equal to
+	uint32 nbits = 5; //target threshold this block’s header hash must be less than or equal to
 	uint32 nonce = 6;
 }
 

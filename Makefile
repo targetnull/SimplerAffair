@@ -45,7 +45,7 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check mychain cli
 
-mychain: chainserver.pb.o chainserver.grpc.pb.o server.o base58.o
+mychain: chainserver.pb.o chainserver.grpc.pb.o server.o base58.o deserialize.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 cli: chainserver.pb.o chainserver.pb.o chainserver.grpc.pb.o cli.o
