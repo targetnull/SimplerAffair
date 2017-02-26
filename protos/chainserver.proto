@@ -54,7 +54,7 @@ message Empty {
 }
 
 enum MsgType {
-        NEW_PEER = 0;
+	NEW_PEER = 0;
 	GET_BLOCK = 1;
 	SEND_BLOCK = 2;
 	GET_NODES = 3;
@@ -75,10 +75,10 @@ message MsgBlock {
 //see https://bitcoin.org/en/developer-reference#block-headers
 message TxHeader {
 	uint32 incnt = 1; //number of inputs
-        bytes SenderPubkey = 2; //public key of the sender
-        bytes DestPublic = 3; //receiver's public key
-        int32 timestamp = 4;
-        uint32 nonce = 5;
+	bytes SenderPubkey = 2; //public key of the sender
+	bytes DestPublic = 3; //receiver's public key
+	int32 timestamp = 4;
+	uint32 nonce = 5;
 }
 
 message Transaction {
@@ -99,6 +99,6 @@ message BlockHeader {
 message Block {
 	BlockHeader header = 1;
 	int32 txn_count = 2; //number of transactions
-	Transaction txns = 3;	
+	repeated Transaction txns = 3;
 }
 

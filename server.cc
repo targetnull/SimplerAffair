@@ -1,16 +1,34 @@
 #include "server.h"
 
-static Status getBlock(const std::string &msg)
+#define CMD_HANDLER   //just helper macro
+
+static CMD_HANDLER Status getBlock(const std::string &msg)
 {
 	std::cout << "get message: " << msg << std::endl;
 	return Status::OK;
 }
 
+static CMD_HANDLER Status sendBlock(const Block &block)
+{
+	std::cout << "ready to send block!!\n";
+	return Status::OK;
+}
+
 //received command from local cli
-static Status cliCmd(const std::string &msg)
+static CMD_HANDLER Status cliCmd(const std::string &msg)
 {
 	std::cout << " this is a command from local cli: " << msg << std::endl;
 	return Status::OK;
+}
+
+//addr, the incoming addr, parse and store it in `ip` and `port`
+static void parseAddr(const std::string &addr, std::string &ip, std::string &port)
+{
+	//TODO. should check if ipv4 or ipv6, assume ipv4 at present
+	int pos1 = addr.find(':');
+    int pos2 = addr.find(':', pos1 + 1);
+	ip = addr.substr(pos1 + 1, pos2 - pos1 - 1);
+	port = addr.substr(pos2 + 1);
 }
 
 static CNode *connect_seed(const char *ip, const char *port)
@@ -28,21 +46,12 @@ static CNode *connect_seed(const char *ip, const char *port)
 	return seed;
 }
 
-static Status sendBlock(const Block &block)
-{
-	std::cout << "ready to send block!!\n";
-	return Status::OK;
-}
-
 Status ChainServerImpl::Connect(ServerContext* context, const MsgBlock* msg, Empty* empty)
 {
-	std::string peer_addr = context->peer();
-	int pos1 = peer_addr.find(':');
-	int pos2 = peer_addr.find(':', pos1 + 1);
-	std::cout << "Received connect from " << peer_addr.substr(pos1 + 1, pos2 - pos1 - 1) << " " << peer_addr.substr(pos2 + 1) << std::endl;
-	//std::cout << "msg type is " << msg->type() << std::endl;
-	std::string peer_ip = peer_addr.substr(pos1 + 1, pos2 - pos1 - 1);
-	std::string peer_port = peer_addr.substr(pos2 + 1);
+	std::string peer_ip;
+	std::string peer_port;
+	parseAddr(context->peer(), peer_ip, peer_port);
+	std::cout << "Receive connection from " << peer_ip << ' ' << peer_port << std::endl;
 	//then establish a reverse connection
 	CNode *node = new CNode(peer_ip, peer_port);
 	cnodes.push_back(node);
@@ -53,26 +62,55 @@ Status ChainServerImpl::SendMsg(ServerContext* context, const MsgBlock* msg, Emp
 {
 	Status res;
 	std::string peer_addr = context->peer();
+#ifndef NO_PARSE
+	std::string ip;
+	std::string port;
+	parseAddr(peer_addr, ip, port);
+	std::cout << "Received message from " << ip << ' ' << port << std::endl;
+#else
 	std::cout << "Received message from " << peer_addr << std::endl;
-	std::cout << "msg type is " << msg->type() << std::endl;
-	switch(msg->type())
+#endif
+
+	std::cout << "message type [before] is " << msg->type() << std::endl;
+	//add msg to queue
+	inmsg.bq.push(msg);
+
+	return Status::OK;
+}
+
+void ChainServerImpl::eventHandler(InboundMsg &inmsg)
+{
+	const MsgBlock *msg;
+	while(true)
 	{
-	case MsgType::GET_BLOCK:
-		res = getBlock(msg->data());
-		break;
-	case MsgType::SEND_BLOCK:
-		res = sendBlock(msg->block());
-		break;
-	case MsgType::GET_CMD:
-		res = cliCmd(msg->data());
-		break;
-	case MsgType::QUIT:
-		//currently does nothing
-	default:
-		res = Status::CANCELLED;
-		break;
+		inmsg.bq.wait_and_pop(msg); //wait until there is an element
+		std::cout << "msg type is " << msg->type() << std::endl;
+		switch(msg->type())
+		{
+			case MsgType::GET_BLOCK:
+				getBlock(msg->data());
+				break;
+			case MsgType::SEND_BLOCK:
+				sendBlock(msg->block());
+				break;
+			case MsgType::GET_CMD:
+				cliCmd(msg->data());
+				break;
+			case MsgType::QUIT:
+				//TODO. should check if it is from the server or the peer
+				//currently lets take it as from server.
+				return; //quit loop
+			default:
+				//res = Status::CANCELLED;
+				break;
+		}
 	}
-	return res;//Status::OK;
+}
+
+//to simplify the method
+void ChainServerImpl::listenEvent()
+{
+	thread_id = std::thread(ChainServerImpl::eventHandler, std::ref(inmsg));
 }
 
 int main(int argc, char** argv)
@@ -81,11 +119,11 @@ int main(int argc, char** argv)
 	ChainServerImpl service;
 	CNode *seed = NULL;
 	if(argc > 1 && argc == 3)
-	{//must both provide ip and port, otherwise only serve as server
+	{ //must both provide ip and port, otherwise only serve as server
 		seed = connect_seed(argv[1], argv[2]);
 		if(NULL == seed) //could not connect seed
 			return 1;
-		service.cnodes.push_back(seed);
+		service.PushNode(seed);
 	}
 
 	ServerBuilder builder;
@@ -93,6 +131,10 @@ int main(int argc, char** argv)
 	builder.RegisterService(&service);
 	std::unique_ptr<Server> server(builder.BuildAndStart());
 	std::cout << "Server listening on " << server_address << std::endl;
+
+	//create a thread that constantly check the event queue
+	service.listenEvent();
+
 	server->Wait();
 	delete seed;
 	return 0;
