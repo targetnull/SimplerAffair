@@ -30,11 +30,11 @@
 #
 
 CXX = g++
-CPPFLAGS += -I/usr/local/include -pthread
+CPPFLAGS += -I/usr/local/include -Iinclude -pthread
 CXXFLAGS += -std=c++11
 LDFLAGS += -L/usr/local/lib `pkg-config --libs grpc++ grpc`       \
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed \
-           -lprotobuf -lpthread -ldl -lcrypto
+           -lprotobuf -lpthread -ldl -lcryptopp
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
@@ -45,7 +45,7 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check mychain cli
 
-mychain: chainserver.pb.o chainserver.grpc.pb.o server.o base58.o deserialize.o
+mychain: chainserver.pb.o chainserver.grpc.pb.o server.o deserialize.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 cli: chainserver.pb.o chainserver.pb.o chainserver.grpc.pb.o cli.o

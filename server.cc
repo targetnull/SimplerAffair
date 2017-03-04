@@ -3,15 +3,18 @@
 
 #define CMD_HANDLER   //just helper macro
 
-static CMD_HANDLER Status getBlock(const std::string &msg)
+static CMD_HANDLER Status sendBlock(const std::string &data)
 {
-	std::cout << "get message: " << msg << std::endl;
+	std::cout << "going to send message: " << data << std::endl;
+	MsgBlock msg; //msg to send
+	//TODO.
+
 	return Status::OK;
 }
 
-static CMD_HANDLER Status sendBlock(lBlock &block)
+static CMD_HANDLER Status getBlock(lBlock &block)
 {
-	std::cout << "ready to send block!!\n";
+	std::cout << "get block!!\n";
 	return Status::OK;
 }
 
@@ -75,7 +78,8 @@ Status ChainServerImpl::SendMsg(ServerContext* context, const MsgBlock* msg, Emp
 	std::cout << "message type [before] is " << msg->type() << std::endl;
 
 	//deserialize MsgBlock to local class object to simplify the process.
-	lMsgBlock *newmsg = new lMsgBlock(msg);
+	lMsgBlock *newmsg = new lMsgBlock;
+	deserial_msgblock(msg, newmsg);
 	inmsg.bq.push(*newmsg);
 
 	return Status::OK;
@@ -91,10 +95,10 @@ void ChainServerImpl::eventHandler(InboundMsg &inmsg)
 		switch(msg.type)
 		{
 			case MsgType::GET_BLOCK:
-				getBlock(msg.data);
+				getBlock(msg.block);
 				break;
 			case MsgType::SEND_BLOCK:
-				sendBlock(msg.block);
+				sendBlock(msg.data);
 				break;
 			case MsgType::GET_CMD: //local command
 				cliCmd(msg.data);

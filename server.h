@@ -12,7 +12,6 @@
 #include "chainserver.grpc.pb.h"
 
 #include "threadsafe_queue.h"
-//#include "deserialize.h"
 
 using grpc::Channel;
 using grpc::Server;
@@ -29,11 +28,12 @@ using chainserver::Empty;
 using chainserver::Transaction;
 using chainserver::TxHeader;
 
-class lMsgBlock;
+#include "deserialize.h"
 
-typedef struct _INBOUNDMSG {
+typedef struct InboundMsg {
 	threadsafe_queue<lMsgBlock> bq;
-	//TODO. add according to your need.
+	//TODO. Change it so no need to copy the whole structure
+	//but a pointer has no reference, threadsafe_queue usese std::queue
 } InboundMsg;
 
 class CNode
