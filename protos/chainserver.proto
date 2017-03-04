@@ -77,8 +77,9 @@ message TxHeader {
 	uint32 incnt = 1; //number of inputs
 	bytes senderpubkey = 2; //public key of the sender
 	bytes destpubkey = 3; //receiver's public key
-	int32 timestamp = 4;
-	uint32 nonce = 5;
+	bytes datahash = 4;
+	int32 timestamp = 5;
+	uint32 nonce = 6;
 }
 
 message Transaction {

@@ -16,6 +16,7 @@ void decode_header(const TxHeader &header, lTxHeader *lheader)
 	lheader->incnt = header.incnt();
 	memcpy(lheader->senderPubkey, header.senderpubkey().c_str(), PUBKEY_LEN);
 	memcpy(lheader->destPubkey, header.destpubkey().c_str(), PUBKEY_LEN);
+	memcpy(lheader->datahash, header.datahash().c_str(), HASH_LEN);
 	lheader->timestamp = header.timestamp();
 	lheader->nonce = header.nonce();
 }
@@ -32,7 +33,7 @@ void deserial_block(const Block &block, lBlock *lblock)
 
 void decode_header(const BlockHeader &header, lBlockHeader *lheader)
 {
-	lheader->version = header.version();
+	//lheader->version = header.version();
 	memcpy(lheader->prev_header_hash, header.prev_header_hash().c_str(), HASH_LEN);
 	memcpy(lheader->merkel_root_hash, header.merkel_root_hash().c_str(), HASH_LEN);
 	lheader->time = header.time();

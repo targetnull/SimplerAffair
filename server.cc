@@ -1,25 +1,35 @@
 #include "server.h"
 #include "deserialize.h"
+#include "block.h"
+#include "transaction.h"
 
-#define CMD_HANDLER   //just helper macro
+#define __CMD_HANDLER   //just helper macro
 
-static CMD_HANDLER Status sendBlock(const std::string &data)
+static Status __CMD_HANDLER sendBlock(const std::string &data)
 {
 	std::cout << "going to send message: " << data << std::endl;
-	MsgBlock msg; //msg to send
 	//TODO.
+	MsgBlock msg;
 
 	return Status::OK;
 }
 
-static CMD_HANDLER Status getBlock(lBlock &block)
+static Status __CMD_HANDLER getBlock(lBlock &block)
 {
 	std::cout << "get block!!\n";
+	if(!VerifyBlock(&block)){
+		std::cerr << "block modified or damaged.\n";
+		return Status::CANCELLED;
+	}
+
+	//then deal with each transaction
+	ProcessTxns(&block);
+
 	return Status::OK;
 }
 
 //received command from local cli
-static CMD_HANDLER Status cliCmd(const std::string &msg)
+static Status __CMD_HANDLER cliCmd(const std::string &msg)
 {
 	std::cout << " this is a command from local cli: " << msg << std::endl;
 	return Status::OK;
